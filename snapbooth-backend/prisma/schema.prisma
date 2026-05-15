@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AppConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Template {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  thumbnailUrl String
+  frameColor   String
+  bgColor      String
+  borderWidth  Int       @default(8)
+  borderRadius Int       @default(0)
+  textLabel    String?
+  textColor    String    @default("#ffffff")
+  fontFamily   String    @default("Arial")
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+}
+
+model Filter {
+  id           String   @id @default(uuid())
+  name         String
+  cssFilter    String
+  thumbnailUrl String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  photos       Photo[]
+}
+
+model Session {
+  id            String          @id @default(uuid())
+  templateId    String?
+  template      Template?       @relation(fields: [templateId], references: [id])
+  status        SessionStatus   @default(IN_PROGRESS)
+  finalImageUrl String?
+  createdAt     DateTime        @default(now())
+  completedAt   DateTime?
+  photos        Photo[]
+  prints        Print[]
+  whatsappSends WhatsappSend[]
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+model Photo {
+  id             String   @id @default(uuid())
+  sessionId      String
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  photoNumber    Int
+  rawImageUrl    String
+  editedImageUrl String?
+  filterId       String?
+  filter         Filter?  @relation(fields: [filterId], references: [id])
+  retakeCount    Int      @default(0)
+  isFinal        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+model Print {
+  id        String      @id @default(uuid())
+  sessionId String
+  session   Session     @relation(fields: [sessionId], references: [id])
+  imageUrl  String
+  status    PrintStatus @default(PENDING)
+  errorMsg  String?
+  printedAt DateTime?
+  createdAt DateTime    @default(now())
+}
+
+enum PrintStatus {
+  PENDING
+  PRINTING
+  SUCCESS
+  FAILED
+}
+
+model WhatsappSend {
+  id          String         @id @default(uuid())
+  sessionId   String
+  session     Session        @relation(fields: [sessionId], references: [id])
+  phoneNumber String
+  imageUrl    String
+  waLink      String
+  status      WhatsappStatus @default(PENDING)
+  sentAt      DateTime?
+  createdAt   DateTime       @default(now())
+}
+
+enum WhatsappStatus {
+  PENDING
+  SENT
+  FAILED
+}
