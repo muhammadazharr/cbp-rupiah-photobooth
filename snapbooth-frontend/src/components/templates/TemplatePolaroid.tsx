@@ -26,8 +26,9 @@ export const TemplatePolaroid: React.FC<Props> = ({ photos, filter }) => {
           </div>
         ))}
       </div>
-      <div className="h-32 flex items-center justify-center mt-8 text-[#1A1A1A]">
-        <h2 className="text-5xl font-serif italic tracking-wider">Memories 2026</h2>
+      <div className="h-32 flex flex-col items-center justify-center mt-8 text-[#1A1A1A]">
+        <span className="text-sm font-bold text-[#004795] tracking-[0.3em] uppercase mb-1">Bank Indonesia</span>
+        <h2 className="text-4xl font-black tracking-tighter">CBP <span className="text-[#004795]">RUPIAH</span></h2>
       </div>
     </div>
   );

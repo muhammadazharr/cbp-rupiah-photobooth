@@ -50,7 +50,7 @@ export default function EditPage() {
   if (photos.length < 4) return null;
 
   return (
-    <main className="flex min-h-screen bg-[#FADBE6]/50">
+    <main className="flex min-h-screen bg-blue-50/50">
       {/* Left side: Preview Area */}
       <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
         <div className="transform scale-[0.6] lg:scale-[0.8] origin-center shadow-2xl">
@@ -66,7 +66,7 @@ export default function EditPage() {
           
           <div>
             <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-[#1A1A1A]">
-              <LayoutTemplate className="w-5 h-5" /> Select Layout
+              <LayoutTemplate className="w-5 h-5 text-[#004795]" /> Select Layout
             </h3>
             <div className="grid grid-cols-1 gap-3">
               {templates.map((t) => (
@@ -75,7 +75,7 @@ export default function EditPage() {
                   onClick={() => setTemplate(t.id)}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${
                     template === t.id 
-                      ? 'border-[#F472B6] bg-[#F472B6]/10 text-[#F472B6] font-bold shadow-md' 
+                      ? 'border-[#004795] bg-[#004795]/10 text-[#004795] font-bold shadow-md' 
                       : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }`}
                 >
@@ -87,7 +87,7 @@ export default function EditPage() {
 
           <div>
             <h3 className="text-xl font-bold flex items-center gap-2 mb-4 text-[#1A1A1A]">
-              <Wand2 className="w-5 h-5" /> Apply Filter
+              <Wand2 className="w-5 h-5 text-[#004795]" /> Apply Filter
             </h3>
             <div className="grid grid-cols-3 gap-3">
               {filters.map((f) => (
@@ -96,7 +96,7 @@ export default function EditPage() {
                   onClick={() => setFilter(f.id)}
                   className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
                     filter === f.id 
-                      ? 'border-[#F472B6] bg-[#F472B6]/10 text-[#F472B6] font-bold shadow-md' 
+                      ? 'border-[#004795] bg-[#004795]/10 text-[#004795] font-bold shadow-md' 
                       : 'border-gray-200 hover:border-gray-300 text-gray-700'
                   }`}
                 >
@@ -115,13 +115,13 @@ export default function EditPage() {
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="w-full py-5 bg-[#F472B6] text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg shadow-pink-200 hover:bg-pink-500 active:scale-95 transition-all disabled:opacity-70"
+            className="w-full py-5 bg-[#004795] text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-200 hover:bg-blue-800 active:scale-95 transition-all disabled:opacity-70"
           >
             {isGenerating ? (
               <span className="animate-pulse">Generating...</span>
             ) : (
               <>
-                <Save className="w-6 h-6" /> Finish & Save
+                <Save className="w-6 h-6" /> Selesai & Simpan
               </>
             )}
           </button>

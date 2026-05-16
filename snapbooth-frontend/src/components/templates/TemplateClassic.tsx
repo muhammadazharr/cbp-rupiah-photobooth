@@ -23,8 +23,9 @@ export const TemplateClassic: React.FC<Props> = ({ photos, filter }) => {
         </div>
       ))}
       {/* Footer / Logo area */}
-      <div className="h-24 flex items-center justify-center border-t-2 border-black/10 mt-2">
-        <h2 className="text-3xl font-black tracking-widest text-[#1A1A1A]">SNAPBOOTH</h2>
+      <div className="h-24 flex flex-col items-center justify-center border-t-2 border-blue-500/20 mt-2">
+        <span className="text-xs font-bold text-[#004795] tracking-widest uppercase">Bank Indonesia</span>
+        <h2 className="text-2xl font-black tracking-tighter text-[#1A1A1A]">CBP <span className="text-[#004795]">RUPIAH</span></h2>
       </div>
     </div>
   );

@@ -113,7 +113,7 @@ export default function CapturePage() {
           {[0, 1, 2, 3].map((index) => (
             <div 
               key={index} 
-              className={`w-16 h-20 rounded-md overflow-hidden border-2 transition-all ${index < photos.length ? 'border-[#F472B6]' : 'border-gray-700 bg-gray-900'}`}
+              className={`w-16 h-20 rounded-md overflow-hidden border-2 transition-all ${index < photos.length ? 'border-[#004795]' : 'border-gray-700 bg-gray-900'}`}
             >
               {photos[index] && (
                 <img src={photos[index]} alt={`shot ${index + 1}`} className="w-full h-full object-cover" />
@@ -132,7 +132,7 @@ export default function CapturePage() {
             <div className={`w-20 h-20 bg-white rounded-full transition-all ${countdown !== null ? 'scale-90 bg-red-500' : 'hover:scale-95'}`} />
           </button>
         ) : (
-          <div className="text-xl font-bold text-[#F472B6] animate-pulse">
+          <div className="text-xl font-bold text-[#004795] animate-pulse">
             Processing...
           </div>
         )}

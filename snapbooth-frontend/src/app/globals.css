@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-pink: #FADBE6;
-  --color-brand-primary: #F472B6;
+  --color-brand-blue: #004795;
+  --color-brand-gold: #D4AF37;
   --color-brand-dark: #1A1A1A;
   --color-brand-surface: rgba(255, 255, 255, 0.8);
 }
 
 :root {
-  --background: #FADBE6;
+  --background: #f0f4f8;
   --foreground: #1A1A1A;
 }
 
@@ -19,8 +19,8 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  /* Soft gradient background */
-  background: linear-gradient(135deg, #FADBE6 0%, #FFFFFF 100%);
+  /* Professional gradient background */
+  background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
   background-attachment: fixed;
 }
 
@@ -38,7 +38,7 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 32px 0 rgba(244, 114, 182, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 71, 149, 0.1);
 }
 
 /* Photo filters */

@@ -1,5 +1,19 @@
 import prisma from '../../config/database';
 import cloudinary from '../../config/cloudinary';
+import { Readable } from 'stream';
+
+const uploadToCloudinary = (buffer: Buffer, folder: string): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    Readable.from(buffer).pipe(uploadStream);
+  });
+};
 
 export const createSession = async () => {
   return prisma.session.create({
@@ -17,7 +31,20 @@ export const getSessionById = async (id: string) => {
   });
 };
 
-export const completeSession = async (id: string, templateId: string) => {
+export const uploadFinalImage = async (id: string, file: Express.Multer.File) => {
+  const session = await prisma.session.findUnique({ where: { id } });
+  if (!session) throw new Error('Session not found');
+  
+  const folder = `snapbooth/sessions/${id}/final`;
+  const result = await uploadToCloudinary(file.buffer, folder);
+
+  return prisma.session.update({
+    where: { id },
+    data: { finalImageUrl: result.secure_url },
+  });
+};
+
+export const completeSession = async (id: string, templateId: string, finalImageUrl?: string) => {
   const session = await prisma.session.findUnique({
     where: { id },
     include: { photos: true },
@@ -32,19 +59,11 @@ export const completeSession = async (id: string, templateId: string) => {
     throw new Error('Cannot complete session unless all 4 photos have been uploaded');
   }
 
-  // Set finalImageUrl (assuming the frontend composite will happen or we just set it later,
-  // but wait, the spec says "finalImageUrl must be set before print or whatsapp".
-  // The frontend might generate the composite and upload it? Or does the backend do it?
-  // The spec says "PATCH /:id/complete -> body: { templateId }, set status COMPLETED".
-  // Let's assume frontend will upload the final image later or we just set it completed.
-  // Actually, wait, "finalImageUrl must be set before print or whatsapp can be called".
-  // If the frontend composites it, they might upload it.
-  // For now, let's just set it completed.
-
   return prisma.session.update({
     where: { id },
     data: {
       templateId,
+      finalImageUrl: finalImageUrl || session.finalImageUrl,
       status: 'COMPLETED',
       completedAt: new Date(),
     },
@@ -62,13 +81,21 @@ export const deleteSession = async (id: string) => {
   // Delete all photos from Cloudinary
   for (const photo of session.photos) {
     if (photo.rawImageUrl) {
-      // extract public id
       const parts = photo.rawImageUrl.split('/');
       const filename = parts.pop()?.split('.')[0];
       const folder = parts.slice(parts.indexOf('snapbooth')).join('/');
       if (folder && filename) {
         await cloudinary.uploader.destroy(`${folder}/${filename}`).catch(() => {});
       }
+    }
+  }
+
+  if (session.finalImageUrl) {
+    const parts = session.finalImageUrl.split('/');
+    const filename = parts.pop()?.split('.')[0];
+    const folder = parts.slice(parts.indexOf('snapbooth')).join('/');
+    if (folder && filename) {
+      await cloudinary.uploader.destroy(`${folder}/${filename}`).catch(() => {});
     }
   }
 
