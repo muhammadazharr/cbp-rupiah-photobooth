@@ -8,29 +8,48 @@ import { useBoothStore } from '../../store/useBoothStore';
 export default function CapturePage() {
   const router = useRouter();
   const { videoRef, startCamera, stopCamera, takePhoto, isReady, error } = useCamera();
-  const { photos, addPhoto, resetPhotos } = useBoothStore();
+  const { photos, addPhoto, resetPhotos, setSessionId, sessionId } = useBoothStore();
   
   const [countdown, setCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Auto start camera on mount
+  // Auto start camera on mount and initialize session
   useEffect(() => {
     resetPhotos();
     startCamera();
+    
+    // Create session on backend
+    const initSession = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/sessions', {
+          method: 'POST',
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSessionId(data.data.sessionId);
+        }
+      } catch (err) {
+        console.error('Failed to create session:', err);
+      }
+    };
+    
+    initSession();
+    
     return () => stopCamera();
-  }, [startCamera, stopCamera, resetPhotos]);
+  }, [startCamera, stopCamera, resetPhotos, setSessionId]);
 
-  // Navigate to edit when 4 photos are taken
+  // Navigate to edit when 4 photos are taken and uploaded
   useEffect(() => {
-    if (photos.length === 4) {
+    if (photos.length === 4 && !isUploading) {
       setTimeout(() => {
         router.push('/edit');
       }, 1000);
     }
-  }, [photos.length, router]);
+  }, [photos.length, router, isUploading]);
 
   const startCaptureSequence = () => {
-    if (countdown !== null || photos.length >= 4) return;
+    if (countdown !== null || photos.length >= 4 || isUploading) return;
     
     let count = 3;
     setCountdown(count);
@@ -45,17 +64,36 @@ export default function CapturePage() {
         
         // Take photo effect
         setFlash(true);
-        // Play shutter sound if added
-        // new Audio('/sounds/shutter.mp3').play().catch(e => console.log(e));
-        
         setTimeout(() => setFlash(false), 150);
         
         const photoUrl = takePhoto();
-        if (photoUrl) {
+        if (photoUrl && sessionId) {
+          const currentPhotoCount = photos.length;
           addPhoto(photoUrl);
+          uploadPhoto(photoUrl, currentPhotoCount + 1);
         }
       }
     }, 1000);
+  };
+
+  const uploadPhoto = async (dataUrl: string, photoNumber: number) => {
+    setIsUploading(true);
+    try {
+      const blob = await fetch(dataUrl).then(r => r.blob());
+      const formData = new FormData();
+      formData.append('file', blob, `photo_${photoNumber}.jpg`);
+      formData.append('sessionId', sessionId!);
+      formData.append('photoNumber', photoNumber.toString());
+
+      await fetch('http://localhost:5000/api/photos/upload', {
+        method: 'POST',
+        body: formData,
+      });
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (

@@ -11,28 +11,83 @@ import { Wand2, LayoutTemplate, Save, RotateCcw } from 'lucide-react';
 
 export default function EditPage() {
   const router = useRouter();
-  const { photos, template, filter, setTemplate, setFilter, setFinalImage } = useBoothStore();
+  const { photos, template, filter, setTemplate, setFilter, setFinalImage, setFinalImageUrl, sessionId } = useBoothStore();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [backendTemplates, setBackendTemplates] = useState<any[]>([]);
 
   useEffect(() => {
-    if (photos.length < 4) {
+    if (photos.length < 4 || !sessionId) {
       router.push('/capture');
     }
-  }, [photos, router]);
+
+    // Fetch real templates from backend
+    const fetchTemplates = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/templates');
+        const data = await res.json();
+        if (data.success) {
+          setBackendTemplates(data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch templates:', err);
+      }
+    };
+    fetchTemplates();
+  }, [photos, sessionId, router]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    // Give a little time for UI to update to loading state
-    setTimeout(async () => {
+    
+    try {
+      // 1. Render the image
       const dataUrl = await renderImage('print-template');
-      if (dataUrl) {
-        setFinalImage(dataUrl);
-        router.push('/result');
-      } else {
-        alert('Failed to generate image. Please try again.');
-        setIsGenerating(false);
-      }
-    }, 100);
+      if (!dataUrl) throw new Error('Failed to render image');
+      
+      setFinalImage(dataUrl);
+
+      // 2. Upload final image to backend
+      const blob = await fetch(dataUrl).then(r => r.blob());
+      const formData = new FormData();
+      formData.append('file', blob, 'final_result.jpg');
+
+      const uploadRes = await fetch(`http://localhost:5000/api/sessions/${sessionId}/final-image`, {
+        method: 'POST',
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+      if (!uploadData.success) throw new Error(uploadData.message);
+      
+      const finalUrl = uploadData.data.finalImageUrl;
+      setFinalImageUrl(finalUrl);
+
+      // 3. Find a real template UUID from backend (matching by name or pick first)
+      const templateNameMap: Record<string, string> = {
+        'classic': 'Classic White',
+        'polaroid': 'Rose Gold',
+        'editorial': 'Midnight Black'
+      };
+      const targetName = templateNameMap[template] || 'Classic White';
+      const realTemplate = backendTemplates.find(t => t.name === targetName) || backendTemplates[0];
+      const templateId = realTemplate?.id;
+
+      // 4. Complete session
+      const completeRes = await fetch(`http://localhost:5000/api/sessions/${sessionId}/complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId: templateId,
+          finalImageUrl: finalUrl
+        }),
+      });
+      const completeData = await completeRes.json();
+      if (!completeData.success) throw new Error(completeData.message);
+
+      router.push('/result');
+    } catch (err: any) {
+      alert(err.message || 'Failed to generate image. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const templates: { id: TemplateType; name: string }[] = [

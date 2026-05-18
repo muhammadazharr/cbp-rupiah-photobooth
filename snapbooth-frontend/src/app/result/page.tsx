@@ -8,21 +8,35 @@ import { Printer, MessageCircle, Home, CheckCircle2 } from 'lucide-react';
 
 export default function ResultPage() {
   const router = useRouter();
-  const { finalImage, resetAll } = useBoothStore();
+  const { finalImage, finalImageUrl, sessionId, resetAll } = useBoothStore();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (!finalImage) {
+    if (!finalImage || !sessionId) {
       router.push('/');
     }
-  }, [finalImage, router]);
+  }, [finalImage, sessionId, router]);
 
-  const handlePrint = () => {
-    // In a real app, this would call the /api/print backend endpoint
-    // For web frontend, we can trigger browser print or show a success message
-    window.print();
+  const handlePrint = async () => {
+    setIsPrinting(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/print/session/${sessionId}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Foto sedang dicetak! Silakan ambil di printer.');
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err: any) {
+      alert('Gagal mencetak: ' + err.message);
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const handleSendWA = async (e: React.FormEvent) => {
@@ -30,15 +44,28 @@ export default function ResultPage() {
     if (!phoneNumber) return;
     
     setIsSending(true);
-    // Simulate API call to backend /api/whatsapp/send
-    setTimeout(() => {
+    try {
+      const res = await fetch('http://localhost:5000/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          phoneNumber
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSent(true);
+        setPhoneNumber('');
+        setTimeout(() => setSent(false), 5000);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err: any) {
+      alert('Gagal mengirim WhatsApp: ' + err.message);
+    } finally {
       setIsSending(false);
-      setSent(true);
-      setPhoneNumber('');
-      
-      // Reset sent status after 3 seconds
-      setTimeout(() => setSent(false), 3000);
-    }, 1500);
+    }
   };
 
   const handleDone = () => {
@@ -70,7 +97,7 @@ export default function ResultPage() {
             {/* Scan QR */}
             <div className="flex items-center gap-6">
               <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                <QRCodeSVG value="https://snapbooth.app/gallery/12345" size={120} />
+                <QRCodeSVG value={finalImageUrl || 'https://snapbooth.id'} size={120} />
               </div>
               <div>
                 <h3 className="text-2xl font-bold mb-2 text-[#1A1A1A]">Pindai untuk Unduh</h3>
@@ -114,9 +141,10 @@ export default function ResultPage() {
             <div className="flex gap-4">
               <button
                 onClick={handlePrint}
-                className="flex-1 py-5 bg-[#004795] text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 hover:bg-blue-800 active:scale-95 transition-all shadow-xl shadow-blue-200"
+                disabled={isPrinting}
+                className="flex-1 py-5 bg-[#004795] text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 hover:bg-blue-800 active:scale-95 transition-all shadow-xl shadow-blue-200 disabled:opacity-70"
               >
-                <Printer className="w-6 h-6" /> Cetak Foto
+                {isPrinting ? 'Mencetak...' : <><Printer className="w-6 h-6" /> Cetak Foto</>}
               </button>
               
               <button
