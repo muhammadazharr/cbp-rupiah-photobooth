@@ -23,7 +23,7 @@ export default function EditPage() {
     // Fetch real templates from backend
     const fetchTemplates = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/templates');
+        const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/templates');
         const data = await res.json();
         if (data.success) {
           setBackendTemplates(data.data);
@@ -50,7 +50,7 @@ export default function EditPage() {
       const formData = new FormData();
       formData.append('file', blob, 'final_result.jpg');
 
-      const uploadRes = await fetch(`http://localhost:5000/api/sessions/${sessionId}/final-image`, {
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${sessionId}/final-image`, {
         method: 'POST',
         body: formData,
       });
@@ -71,7 +71,7 @@ export default function EditPage() {
       const templateId = realTemplate?.id;
 
       // 4. Complete session
-      const completeRes = await fetch(`http://localhost:5000/api/sessions/${sessionId}/complete`, {
+      const completeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${sessionId}/complete`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

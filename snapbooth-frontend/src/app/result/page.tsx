@@ -23,7 +23,7 @@ export default function ResultPage() {
   const handlePrint = async () => {
     setIsPrinting(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/print/session/${sessionId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/print/session/${sessionId}`, {
         method: 'POST',
       });
       const data = await res.json();
@@ -45,7 +45,7 @@ export default function ResultPage() {
     
     setIsSending(true);
     try {
-      const res = await fetch('http://localhost:5000/api/whatsapp/send', {
+      const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/whatsapp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

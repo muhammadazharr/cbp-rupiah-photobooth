@@ -67,18 +67,20 @@ app.use(helmet({
 
 const allowedOrigins = [
   env.ALLOWED_ORIGIN,
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
   `http://localhost:${env.PORT}`,
   `http://127.0.0.1:${env.PORT}`,
 ];
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (curl, Postman, same-origin page loads)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
+  credentials: true,
 }));
 
 // Rate Limiter hanya untuk /api

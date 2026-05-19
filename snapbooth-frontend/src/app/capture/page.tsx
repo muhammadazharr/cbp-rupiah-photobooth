@@ -22,7 +22,7 @@ export default function CapturePage() {
     // Create session on backend
     const initSession = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/sessions', {
+        const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/sessions', {
           method: 'POST',
         });
         const data = await res.json();
@@ -85,7 +85,7 @@ export default function CapturePage() {
       formData.append('sessionId', sessionId!);
       formData.append('photoNumber', photoNumber.toString());
 
-      await fetch('http://localhost:5000/api/photos/upload', {
+      await fetch('${process.env.NEXT_PUBLIC_API_URL}/photos/upload', {
         method: 'POST',
         body: formData,
       });
