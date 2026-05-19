@@ -4,13 +4,18 @@ import env from '../config/env';
 import { AuthRequest, AdminPayload } from '../types';
 
 export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
+  let token = req.cookies.admin_token;
 
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
 
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET) as AdminPayload;

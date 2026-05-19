@@ -13,11 +13,22 @@ export const login = async (req: AuthRequest, res: any) => {
     return sendError(res, 'Invalid credentials', 401);
   }
 
-  return sendSuccess(res, 'Login successful', result);
+  // Set HttpOnly Cookie
+  res.cookie('admin_token', result.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax', // Use 'lax' for better dev experience with localhost ports
+    maxAge: 8 * 60 * 60 * 1000 // 8 hours
+  });
+
+  // Don't send token in body anymore
+  const { token, ...adminData } = result;
+
+  return sendSuccess(res, 'Login successful', adminData);
 };
 
 export const logout = async (req: AuthRequest, res: any) => {
-  // Logout is client-side, but we can log it here
+  res.clearCookie('admin_token');
   return sendSuccess(res, 'Logout successful');
 };
 

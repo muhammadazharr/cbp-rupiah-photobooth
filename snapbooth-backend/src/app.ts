@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import env from './config/env';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -92,6 +93,7 @@ app.use(morgan('combined', {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // 4. API ROUTES
 app.use('/api/auth', authRoutes);

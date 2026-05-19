@@ -20,12 +20,12 @@ export default function AdminLogin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
+        credentials: 'include'
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem('admin_token', data.data.token);
         router.push('/admin/dashboard');
       } else {
         setError(data.message || 'Login failed');

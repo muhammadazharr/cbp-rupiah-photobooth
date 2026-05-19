@@ -16,23 +16,23 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchData = async () => {
-    const token = localStorage.getItem('admin_token');
-    if (!token) {
-      router.push('/admin/login');
-      return;
-    }
-
     try {
       // Fetch Analytics
       const anaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/analytics`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
+
+      if (anaRes.status === 401) {
+        router.push('/admin/login');
+        return;
+      }
+
       const anaData = await anaRes.json();
       if (anaRes.ok) setAnalytics(anaData.data);
 
       // Fetch Camera Config (via specialized endpoint)
       const camRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/config/camera`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
       const camData = await camRes.json();
       if (camRes.ok) setConfig(prev => ({ ...prev, cameraSource: camData.data.cameraSource }));
@@ -48,16 +48,15 @@ export default function AdminDashboard() {
     e.preventDefault();
     setSaving(true);
     setMessage('');
-    const token = localStorage.getItem('admin_token');
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/config/camera`, {
         method: 'PATCH',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ cameraSource: config.cameraSource })
+        body: JSON.stringify({ cameraSource: config.cameraSource }),
+        credentials: 'include'
       });
 
       if (res.ok) {
@@ -73,9 +72,15 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    router.push('/admin/login');
+  const handleLogout = async () => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } finally {
+      router.push('/admin/login');
+    }
   };
 
   if (loading) return <div className="p-10 text-center">Loading Dashboard...</div>;
